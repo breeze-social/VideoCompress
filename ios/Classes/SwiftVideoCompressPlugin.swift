@@ -207,6 +207,9 @@ public class SwiftVideoCompressPlugin: NSObject, FlutterPlugin {
         exporter.outputURL = compressionUrl
         exporter.outputFileType = AVFileType.mp4
         exporter.shouldOptimizeForNetworkUse = true
+        // The export inherits the source asset's metadata by default, including the camera's location
+        // as a 3GPP `loci` box in `udta`. Write none of it.
+        exporter.metadata = []
         
         if frameRate != nil {
             let videoComposition = AVMutableVideoComposition(propertiesOf: sourceVideoAsset)

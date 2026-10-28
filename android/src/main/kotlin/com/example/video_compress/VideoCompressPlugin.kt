@@ -5,6 +5,8 @@ import android.net.Uri
 import android.util.Log
 import com.otaliastudios.transcoder.Transcoder
 import com.otaliastudios.transcoder.TranscoderListener
+import com.otaliastudios.transcoder.sink.DataSink
+import com.otaliastudios.transcoder.sink.DefaultDataSink
 import com.otaliastudios.transcoder.source.TrimDataSource
 import com.otaliastudios.transcoder.source.UriDataSource
 import com.otaliastudios.transcoder.strategy.DefaultAudioStrategy
@@ -145,7 +147,13 @@ class VideoCompressPlugin : MethodCallHandler, FlutterPlugin {
                 }
 
 
-                transcodeFuture = Transcoder.into(destPath!!)
+                // Transcoder copies the first data source's location into the output (DefaultTranscodeEngine ->
+                // DataSink.setLocation -> MediaMuxer.setLocation, written as moov/udta/©xyz) and offers no way to
+                // turn that off. Drop it: a compressed video must not reveal where it was recorded.
+                val dataSink = object : DataSink by DefaultDataSink(destPath) {
+                    override fun setLocation(latitude: Double, longitude: Double) {}
+                }
+                transcodeFuture = Transcoder.into(dataSink)
                         .addDataSource(dataSource)
                         .setAudioTrackStrategy(audioTrackStrategy)
                         .setVideoTrackStrategy(videoTrackStrategy)
